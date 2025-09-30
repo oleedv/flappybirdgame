@@ -1,0 +1,50 @@
+{
+  "name": "flappy-bird-game",
+  "version": "1.0.0",
+  "description": "A modern recreation of the classic Flappy Bird game built with React.js",
+  "author": "Oleed <oleedv@example.com>",
+  "private": true,
+  "homepage": ".",
+  "keywords": [
+    "flappy-bird",
+    "game",
+    "react",
+    "javascript",
+    "canvas"
+  ],
+  "dependencies": {
+    "axios": "^0.21.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "scripts": {
+    "start": "react-scripts --openssl-legacy-provider start",
+    "build": "react-scripts --openssl-legacy-provider build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "server": "cd backend && npm start",
+    "server:dev": "cd backend && npm run dev",
+    "dev": "concurrently \"npm run server:dev\" \"npm start\"",
+    "install:all": "npm install && cd backend && npm install",
+    "build:full": "npm run build && cd backend && npm install --production"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

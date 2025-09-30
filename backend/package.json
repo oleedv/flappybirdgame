@@ -1,0 +1,27 @@
+{
+  "name": "flappy-bird-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Flappy Bird Game with SQLite database",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.6",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["express", "sqlite", "api", "flappy-bird"],
+  "author": "Oleed",
+  "license": "MIT"
+}
