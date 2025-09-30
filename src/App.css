@@ -124,6 +124,7 @@
   flex-direction: column;
   align-items: center;
   margin: 1rem 0;
+  width: 100%;
 }
 
 .game-canvas {
@@ -131,6 +132,8 @@
   border-radius: 10px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   background: #87CEEB;
+  max-width: 100%;
+  height: auto;
 }
 
 .game-controls {
@@ -253,46 +256,85 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .app-header {
+    padding: 0.5rem 0.5rem;
+  }
+  
   .game-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 0.25rem;
   }
   
   .game-subtitle {
-    font-size: 1rem;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+  
+  /* Make game much bigger on mobile */
+  .game-container {
+    margin: 0.25rem 0;
   }
   
   .game-canvas {
-    width: 90vw;
-    height: calc(90vw * 0.625); /* Maintain aspect ratio */
+    width: 98vw;
+    height: calc(98vw * 0.625); /* Maintain proper aspect ratio */
     max-width: 800px;
-    max-height: 500px;
+    max-height: 75vh; /* Take up more of the screen height */
+    border-radius: 5px;
+    border-width: 2px;
   }
   
   .username-form-container,
   .leaderboard-container {
     min-width: auto;
-    width: 90%;
-    margin: 1rem 0;
-    padding: 1.5rem;
+    width: 95%;
+    margin: 0.5rem auto;
+    padding: 1rem;
+  }
+  
+  .welcome-message {
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .welcome-message h2 {
+    font-size: 1.2rem;
+    margin: 0;
   }
   
   .game-controls {
-    flex-direction: column;
-    width: 200px;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
   }
   
   .control-btn {
-    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Hide leaderboard during game on mobile */
+  .game-active .leaderboard-container {
+    display: none;
   }
 }
 
 @media (max-width: 480px) {
   .app-header {
-    padding: 1rem;
+    padding: 0.25rem 0.5rem;
   }
   
   .game-title {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    margin-bottom: 0.1rem;
+  }
+  
+  .game-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .game-canvas {
+    max-height: 80vh; /* Even more screen space on smaller phones */
   }
   
   .username-form-container,

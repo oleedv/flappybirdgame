@@ -11,14 +11,27 @@ const PORT = process.env.PORT || 3001;
 
 // Database setup
 const dbPath = process.env.NODE_ENV === 'production' 
-  ? path.join(__dirname, 'database.db')
-  : path.join(__dirname, 'database.db');
+  ? '/database/flappybird.db'  // Railway volume path
+  : path.join(__dirname, 'database.db');  // Local development
+
+// Ensure database directory exists in production
+if (process.env.NODE_ENV === 'production') {
+  const fs = require('fs');
+  const databaseDir = '/database';
+  if (!fs.existsSync(databaseDir)) {
+    console.log('Creating database directory...');
+    fs.mkdirSync(databaseDir, { recursive: true });
+  }
+}
+
+console.log(`Database path: ${dbPath}`);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database:', err);
+    console.error('Database path was:', dbPath);
   } else {
-    console.log('Connected to SQLite database');
+    console.log(`Connected to SQLite database at: ${dbPath}`);
     initializeDatabase();
   }
 });
@@ -60,7 +73,7 @@ app.use(compression());
 app.use(morgan('combined'));
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-app-domain.com'] // Replace with your actual domain
+    ? true // Allow all origins in production for better web scaling
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true
 }));
@@ -69,7 +82,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../build')));
+  app.use(express.static(path.join(__dirname, 'build')));
 }
 
 // API Routes
@@ -216,7 +229,7 @@ app.get('/api/rank/:score', (req, res) => {
 // Serve React app in production
 if (process.env.NODE_ENV === 'production') {
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../build/index.html'));
+    res.sendFile(path.join(__dirname, 'build/index.html'));
   });
 }
 

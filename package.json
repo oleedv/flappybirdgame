@@ -30,7 +30,7 @@
     "server:dev": "cd backend && npm run dev",
     "dev": "concurrently \"npm run server:dev\" \"npm start\"",
     "install:all": "npm install && cd backend && npm install",
-    "build:full": "npm run build && cd backend && npm install --production"
+    "build:full": "npm ci && npm run build && node -e \"require('fs').cpSync('build', 'backend/build', {recursive: true})\" && cd backend && npm ci --only=production"
   },
   "eslintConfig": {
     "extends": "react-app"

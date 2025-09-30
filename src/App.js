@@ -63,13 +63,14 @@ class Bird {
 
 // Pipe Class
 class Pipe {
-  constructor(ctx, height, isBottom = false) {
+  constructor(ctx, height, isBottom = false, speed = 1.5) {
     this.ctx = ctx;
     this.isDead = false;
     this.x = WIDTH;
     this.width = PIPE_WIDTH;
     this.isBottom = isBottom;
     this.scored = false;
+    this.speed = speed;
     
     if (isBottom) {
       this.y = HEIGHT - height;
@@ -110,7 +111,7 @@ class Pipe {
   };
 
   update = () => {
-    this.x -= 1.5; // Much slower movement for easier gameplay
+    this.x -= this.speed;
     if (this.x + PIPE_WIDTH < 0) {
       this.isDead = true;
     }
@@ -166,6 +167,12 @@ class Game extends Component {
     if (!this.state.gameStarted && !this.state.gameOver) {
       this.setState({ gameStarted: true });
       this.loop = setInterval(this.gameLoop, 1000 / FPS);
+      // Prevent scrolling on mobile
+      document.body.classList.add('game-active');
+      // Notify parent about game state
+      if (this.props.onGameStateChange) {
+        this.props.onGameStateChange({ gameActive: true });
+      }
     }
   };
 
@@ -185,6 +192,12 @@ class Game extends Component {
       clearInterval(this.loop);
     }
     this.initGame();
+    // Re-enable scrolling when restarting
+    document.body.classList.remove('game-active');
+    // Notify parent that game restarted
+    if (this.props.onGameStateChange) {
+      this.props.onGameStateChange({ gameActive: false, gameOver: false });
+    }
   };
 
   onKeyDown = (e) => {
@@ -212,6 +225,8 @@ class Game extends Component {
   onClick = () => {
     if (!this.state.gameStarted) {
       this.startGame();
+    } else if (this.state.gameOver) {
+      this.restart();
     } else if (this.state.gameStarted && !this.state.gameOver && !this.state.paused) {
       this.bird.jump();
     }
@@ -226,13 +241,25 @@ class Game extends Component {
     const isEarlyGame = this.state.score < 3;
     const currentGap = isEarlyGame ? PIPE_GAP + 50 : PIPE_GAP;
     
+    // Calculate speed based on score - increase every 10 points
+    let gameSpeed = 1.5; // Starting speed
+    if (this.state.score >= 10 && this.state.score < 20) {
+      gameSpeed = 2.0;
+    } else if (this.state.score >= 20 && this.state.score < 30) {
+      gameSpeed = 2.5;
+    } else if (this.state.score >= 30 && this.state.score < 40) {
+      gameSpeed = 3.0;
+    } else if (this.state.score >= 40) {
+      gameSpeed = 3.5;
+    }
+    
     const maxHeight = HEIGHT - currentGap - minHeight;
     const topPipeHeight = minHeight + Math.random() * (maxHeight - minHeight);
     const bottomPipeHeight = HEIGHT - topPipeHeight - currentGap;
 
     return [
-      new Pipe(ctx, topPipeHeight, false),
-      new Pipe(ctx, bottomPipeHeight, true)
+      new Pipe(ctx, topPipeHeight, false, gameSpeed),
+      new Pipe(ctx, bottomPipeHeight, true, gameSpeed)
     ];
   };
 
@@ -289,6 +316,12 @@ class Game extends Component {
       this.setState({ gameOver: true });
       this.submitScore();
       clearInterval(this.loop);
+      // Re-enable scrolling when game ends
+      document.body.classList.remove('game-active');
+      // Notify parent that game ended
+      if (this.props.onGameStateChange) {
+        this.props.onGameStateChange({ gameActive: false, gameOver: true });
+      }
     }
   };
   checkCollisions = () => {
@@ -331,6 +364,16 @@ class Game extends Component {
     ctx.font = 'bold 30px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(`Score: ${this.state.score}`, WIDTH / 2, 50);
+    
+    // Speed level indicator
+    let speedLevel = 1;
+    if (this.state.score >= 10 && this.state.score < 20) speedLevel = 2;
+    else if (this.state.score >= 20 && this.state.score < 30) speedLevel = 3;
+    else if (this.state.score >= 30 && this.state.score < 40) speedLevel = 4;
+    else if (this.state.score >= 40) speedLevel = 5;
+    
+    ctx.font = '16px Arial';
+    ctx.fillText(`Speed Level: ${speedLevel}`, WIDTH / 2, 80);
 
     if (!this.state.gameStarted) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -413,7 +456,9 @@ class App extends Component {
     hasUsername: false,
     scores: [],
     loading: true,
-    error: null
+    error: null,
+    gameActive: false,
+    gameOver: false
   };
 
   componentDidMount() {
@@ -459,6 +504,13 @@ class App extends Component {
   onScoreSubmitted = () => {
     this.getScores(); // Refresh leaderboard after score submission
   };
+
+  onGameStateChange = (gameState) => {
+    this.setState({
+      gameActive: gameState.gameActive,
+      gameOver: gameState.gameOver || false
+    });
+  };
   render() {
     const { hasUsername, username, scores, loading, error } = this.state;
 
@@ -500,11 +552,14 @@ class App extends Component {
               <Game 
                 username={username} 
                 onScoreSubmitted={this.onScoreSubmitted}
+                onGameStateChange={this.onGameStateChange}
               />
             </>
           )}
 
-          <div className="leaderboard-container">
+          {/* Show leaderboard when game is not active or after game over */}
+          {(!this.state.gameActive || this.state.gameOver || !hasUsername) && (
+            <div className="leaderboard-container">
             <h3 className="leaderboard-title">
               <span role="img" aria-label="trophy">🏆</span> Leaderboard
             </h3>
@@ -546,6 +601,7 @@ class App extends Component {
               <div className="no-scores">No scores yet. Be the first to play!</div>
             )}
           </div>
+          )}
         </main>
 
         <footer className="app-footer">
