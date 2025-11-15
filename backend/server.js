@@ -10,15 +10,22 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// PostgreSQL connection for analytics
-const pgPool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// PostgreSQL connection for analytics (only if DATABASE_URL is provided)
+let pgPool = null;
+if (process.env.DATABASE_URL) {
+  pgPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
 
-pgPool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL error:', err);
-});
+  pgPool.on('error', (err) => {
+    console.error('Unexpected PostgreSQL error:', err);
+  });
+  
+  console.log('✅ PostgreSQL connection pool initialized');
+} else {
+  console.log('⚠️  DATABASE_URL not found - PostgreSQL analytics disabled');
+}
 
 // Database setup
 const dbPath = process.env.NODE_ENV === 'production' 
@@ -91,8 +98,8 @@ function initializeDatabase() {
 
 // Initialize PostgreSQL analytics table
 async function initializePostgres() {
-  if (!process.env.DATABASE_URL) {
-    console.log('No DATABASE_URL found, skipping PostgreSQL analytics setup');
+  if (!pgPool) {
+    console.log('⚠️  PostgreSQL pool not initialized, skipping analytics setup');
     return;
   }
   
@@ -199,7 +206,7 @@ function parseUserAgent(userAgent) {
 
 app.use(async (req, res, next) => {
   // Log all requests to PostgreSQL analytics
-  if (process.env.DATABASE_URL) {
+  if (pgPool) {
     const ip = getClientIP(req);
     const userAgent = req.headers['user-agent'] || '';
     const { browser, os, deviceType } = parseUserAgent(userAgent);
@@ -314,6 +321,10 @@ app.get('/api/visitors/stats', (req, res) => {
 
 // Get all analytics data from oleed_analytics
 app.get('/api/analytics', async (req, res) => {
+  if (!pgPool) {
+    return res.status(503).json({ error: 'PostgreSQL analytics not configured. Set DATABASE_URL environment variable.' });
+  }
+  
   try {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
@@ -334,6 +345,10 @@ app.get('/api/analytics', async (req, res) => {
 
 // Get analytics statistics and insights
 app.get('/api/analytics/stats', async (req, res) => {
+  if (!pgPool) {
+    return res.status(503).json({ error: 'PostgreSQL analytics not configured. Set DATABASE_URL environment variable.' });
+  }
+  
   try {
     // Overall stats
     const overallStats = await pgPool.query(`
@@ -438,6 +453,10 @@ app.get('/api/analytics/stats', async (req, res) => {
 
 // Get unique IPs with details
 app.get('/api/analytics/ips', async (req, res) => {
+  if (!pgPool) {
+    return res.status(503).json({ error: 'PostgreSQL analytics not configured. Set DATABASE_URL environment variable.' });
+  }
+  
   try {
     const result = await pgPool.query(`
       SELECT 
