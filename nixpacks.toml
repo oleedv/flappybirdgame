@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.install]
+cmds = ["npm ci --omit=dev"]
+
+[phases.build]
+cmds = ["npm run build", "node -e \"require('fs').cpSync('build', 'backend/build', {recursive: true})\"", "cd backend && npm ci --omit=dev"]
+
+[start]
+cmd = "cd backend && npm start"
